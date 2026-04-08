@@ -9,8 +9,10 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-# Set build-time env for API (if needed, otherwise handled by env file or client config)
-# ENV NEXT_PUBLIC_API_URL=http://localhost:4000/api
+
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+
 RUN npm run build
 
 # Stage 3: Runner
