@@ -340,9 +340,7 @@ export default function EvaluationView() {
   const { t } = useTranslation();
 
   const isCEO = user?.role === 'CEO' || user?.role === 'SUPERADMIN';
-  const isHR = user?.role === 'HR';
   const isHead = user?.role === 'HEAD_OF_DEPT';
-  const canSeeAll = isCEO;
 
   // ── New Evaluation Modal state ────────────────────────
   const [modalOpen, setModalOpen] = useState(false);
@@ -489,7 +487,7 @@ export default function EvaluationView() {
               placeholder="ค้นหาพนักงาน หรือ ผู้ประเมิน..."
             />
           </div>
-          {canSeeAll && (
+          {isCEO && (
             <select
               className="input-field"
               style={{ maxWidth: 190 }}
@@ -618,7 +616,7 @@ export default function EvaluationView() {
                           >
                             <Eye size={14} />
                           </button>
-                          {canSeeAll && (
+                          {isCEO && (
                             <button
                               className="btn-icon-danger"
                               onClick={() => deleteEvaluation(ev.id)}
