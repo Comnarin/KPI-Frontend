@@ -44,7 +44,7 @@ export default function EmployeesView() {
   const [form, setForm] = useState<EmployeeForm>({
     firstName: '', lastName: '', email: '', code: '', department: '',
     position: '', baseSalary: 0, personalCapacity: 0, variablePayBase: 0,
-    yearsOfService: 0, status: 'ทำงาน', startDate: new Date().toISOString().slice(0, 10),
+    yearsOfService: 0, status: 'ACTIVE', startDate: new Date().toISOString().slice(0, 10),
   });
 
   const filtered = employees;
@@ -54,7 +54,7 @@ export default function EmployeesView() {
     setForm({
       firstName: '', lastName: '', email: '', code: '', department: departments[0]?.name || '',
       position: '', baseSalary: 0, personalCapacity: 0, variablePayBase: 0,
-      yearsOfService: 0, status: 'ทำงาน', startDate: new Date().toISOString().slice(0, 10),
+      yearsOfService: 0, status: 'ACTIVE', startDate: new Date().toISOString().slice(0, 10),
     });
     setModalOpen(true);
   }
