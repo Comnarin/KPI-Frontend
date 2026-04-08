@@ -17,6 +17,12 @@ interface Tenant {
   users?: { id: string }[];
 }
 
+interface TenantConfig {
+  enableHrEval: boolean;
+  enableDeptHeadEval: boolean;
+  enableCeoEval: boolean;
+}
+
 const PERMISSION_LABELS: Record<string, string> = {
   view_dashboard: 'ดูภาพรวม', crud_employee: 'จัดการพนักงาน',
   crud_department: 'จัดการแผนก', crud_template: 'ตั้งค่า KPI',
@@ -29,23 +35,32 @@ const ROLE_LABELS: Record<string, string> = {
   HEAD_OF_DEPT: 'หัวหน้าแผนก', EMPLOYEE: 'พนักงาน',
 };
 
+const getMaxUsersBySize = (size: string) => {
+  switch (size) {
+    case 'SMALL': return 20;
+    case 'MEDIUM': return 200;
+    case 'ENTERPRISE': return 1000;
+    default: return 20;
+  }
+};
+
 export default function AdminView() {
   const router = useRouter();
   const { user } = useAppStore();
 
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
-  const [permissions, setPermissions] = useState<RolePermission[]>([]);
+  const [config, setConfig] = useState<TenantConfig>({ enableHrEval: false, enableDeptHeadEval: false, enableCeoEval: true });
   const [loadingTenants, setLoadingTenants] = useState(false);
-  const [loadingPerms, setLoadingPerms] = useState(false);
-  const [savingPerms, setSavingPerms] = useState(false);
+  const [loadingConfig, setLoadingConfig] = useState(false);
+  const [savingConfig, setSavingConfig] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [createForm, setCreateForm] = useState({ name: '', code: '', size: 'Small', maxUsers: 20, adminEmail: '', adminPassword: '', adminName: '' });
+  const [createForm, setCreateForm] = useState({ name: '', code: '', size: 'SMALL', maxUsers: 20, adminEmail: '', adminPassword: '', adminName: '' });
   const [creating, setCreating] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [editForm, setEditForm] = useState({ name: '', code: '', size: 'Small', maxUsers: 20, isActive: true });
+  const [editForm, setEditForm] = useState({ name: '', code: '', size: 'SMALL', maxUsers: 20, isActive: true });
   const [savingEdit, setSavingEdit] = useState(false);
-  const [activeTab, setActiveTab] = useState<'overview' | 'permissions'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'features'>('overview');
 
   useEffect(() => { if (user && user.role !== 'SUPERADMIN') router.push('/dashboard'); }, [user, router]);
   useEffect(() => { loadTenants(); }, []);
@@ -58,30 +73,22 @@ export default function AdminView() {
   const selectTenant = async (tenant: Tenant) => { setSelectedTenant(tenant); setActiveTab('overview'); };
 
   useEffect(() => {
-    if (activeTab === 'permissions' && selectedTenant) loadPermissions();
+    if (activeTab === 'features' && selectedTenant) loadConfig();
   }, [activeTab, selectedTenant]);
 
-  const loadPermissions = async () => {
+  const loadConfig = async () => {
     if (!selectedTenant) return;
-    setLoadingPerms(true);
-    try { setPermissions(await api.get<RolePermission[]>(`/admin/tenants/${selectedTenant.id}/permissions`)); } catch (e) { console.error(e); } finally { setLoadingPerms(false); }
+    setLoadingConfig(true);
+    try { 
+      const data = await api.get<TenantConfig>(`/admin/tenants/${selectedTenant.id}/config`);
+      setConfig(data);
+    } catch (e) { console.error(e); } finally { setLoadingConfig(false); }
   };
 
-  const togglePermission = (role: string, permKey: string) => {
-    setPermissions(prev => {
-      const exists = prev.some(p => p.role === role && p.permissionKey === permKey);
-      if (exists) {
-        return prev.map(p => p.role === role && p.permissionKey === permKey ? { ...p, allowed: !p.allowed } : p);
-      }
-      return [...prev, { role, permissionKey: permKey, allowed: true, tenantId: selectedTenant?.id }];
-    });
-  };
-  const getPermValue = (role: string, permKey: string) => permissions.find(p => p.role === role && p.permissionKey === permKey)?.allowed ?? false;
-
-  const savePermissions = async () => {
+  const saveConfig = async () => {
     if (!selectedTenant) return;
-    setSavingPerms(true);
-    try { await api.put(`/admin/tenants/${selectedTenant.id}/permissions`, { permissions } as unknown as Record<string, unknown>); } catch (e) { console.error(e); } finally { setSavingPerms(false); }
+    setSavingConfig(true);
+    try { await api.put(`/admin/tenants/${selectedTenant.id}/config`, config as unknown as Record<string, unknown>); } catch (e) { console.error(e); alert('Failed to save configuration'); } finally { setSavingConfig(false); }
   };
 
   const handleCreateTenant = async () => {
@@ -89,7 +96,7 @@ export default function AdminView() {
     try {
       await api.post('/admin/tenants', createForm as unknown as Record<string, unknown>);
       setShowCreateModal(false);
-      setCreateForm({ name: '', code: '', size: 'Small', maxUsers: 20, adminEmail: '', adminPassword: '', adminName: '' });
+      setCreateForm({ name: '', code: '', size: 'SMALL', maxUsers: 20, adminEmail: '', adminPassword: '', adminName: '' });
       await loadTenants();
     } catch (e) { console.error(e); } finally { setCreating(false); }
   };
@@ -197,9 +204,9 @@ export default function AdminView() {
                 <div className="flex gap-2 mt-4">
                   {[
                     { id: 'overview', label: 'ภาพรวม', icon: Settings },
-                    { id: 'permissions', label: 'สิทธิ์การเข้าถึง', icon: ShieldCheck },
+                    { id: 'features', label: 'ตั้งค่าฟีเจอร์', icon: ShieldCheck },
                   ].map(tab => (
-                    <button key={tab.id} onClick={() => setActiveTab(tab.id as 'overview' | 'permissions')}
+                    <button key={tab.id} onClick={() => setActiveTab(tab.id as 'overview' | 'features')}
                       className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                         activeTab === tab.id
                           ? 'bg-indigo-50 text-indigo-600 border border-indigo-200'
@@ -253,46 +260,44 @@ export default function AdminView() {
                   </>
                 )}
 
-                {activeTab === 'permissions' && (
+                {activeTab === 'features' && (
                   <div>
-                    {loadingPerms ? (
-                      <p className="text-slate-400 text-center py-10">กำลังโหลดสิทธิ์...</p>
+                    {loadingConfig ? (
+                      <p className="text-slate-400 text-center py-10">กำลังโหลดการตั้งค่า...</p>
                     ) : (
-                      <>
-                        <div className="overflow-x-auto rounded-xl border border-slate-100">
-                          <table className="w-full text-sm" style={{ borderCollapse: 'collapse' }}>
-                            <thead>
-                              <tr className="bg-slate-50">
-                                <th className="p-3 text-left text-xs font-semibold text-slate-400">สิทธิ์</th>
-                                {ROLES.map(role => (
-                                  <th key={role} className="p-3 text-center text-xs font-semibold text-slate-500">{ROLE_LABELS[role]}</th>
-                                ))}
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {Object.entries(PERMISSION_LABELS).map(([permKey, label]) => (
-                                <tr key={permKey} className="border-t border-slate-50">
-                                  <td className="p-3 text-slate-700">{label}</td>
-                                  {ROLES.map(role => (
-                                    <td key={role} className="p-3 text-center">
-                                      <button onClick={() => togglePermission(role, permKey)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
-                                        {getPermValue(role, permKey)
-                                          ? <CheckCircle size={18} className="text-emerald-500" />
-                                          : <XCircle size={18} className="text-slate-300" />}
-                                      </button>
-                                    </td>
-                                  ))}
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
+                      <div className="space-y-6">
+                        <div className="grid gap-4">
+                          {[
+                            { key: 'enableHrEval', label: 'เปิดใช้งานการประเมินโดย HR (HR Evaluation Stage)', icon: Users },
+                            { key: 'enableDeptHeadEval', label: 'เปิดใช้งานการประเมินโดยหัวหน้าแผนก (Dept Head Stage)', icon: RefreshCw },
+                            { key: 'enableCeoEval', label: 'เปิดใช้งานการประเมินโดยผู้บริหาร (CEO Stage)', icon: ShieldCheck },
+                          ].map(f => (
+                            <div key={f.key} className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100">
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center text-indigo-500 shadow-sm">
+                                  <f.icon size={18} />
+                                </div>
+                                <div>
+                                  <div className="text-sm font-semibold text-slate-700">{f.label}</div>
+                                  <div className="text-xs text-slate-400">กำหนดว่าการประเมินต้องผ่านขั้นตอนนี้หรือไม่</div>
+                                </div>
+                              </div>
+                              <button 
+                                onClick={() => setConfig(prev => ({ ...prev, [f.key]: !prev[f.key as keyof TenantConfig] }))}
+                                className={`w-12 h-6 rounded-full transition-colors relative ${config[f.key as keyof TenantConfig] ? 'bg-indigo-500' : 'bg-slate-300'}`}
+                                style={{ padding: 0, border: 'none', cursor: 'pointer' }}
+                              >
+                                <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${config[f.key as keyof TenantConfig] ? 'left-7' : 'left-1'}`} />
+                              </button>
+                            </div>
+                          ))}
                         </div>
-                        <div className="flex justify-end mt-5">
-                          <button className="btn-primary" onClick={savePermissions} disabled={savingPerms}>
-                            <Save size={16} /> {savingPerms ? 'กำลังบันทึก...' : 'บันทึกสิทธิ์'}
+                        <div className="flex justify-end pt-4">
+                          <button className="btn-primary" onClick={saveConfig} disabled={savingConfig}>
+                            <Save size={16} /> {savingConfig ? 'กำลังบันทึก...' : 'บันทึกฟีเจอร์'}
                           </button>
                         </div>
-                      </>
+                      </div>
                     )}
                   </div>
                 )}
@@ -321,8 +326,13 @@ export default function AdminView() {
               <div><label className="form-label">รหัส *</label><input className="input-field" value={createForm.code} onChange={e => setCreateForm({ ...createForm, code: e.target.value.toUpperCase() })} placeholder="COMPANY01" /></div>
               <div>
                 <label className="form-label">ขนาดองค์กร</label>
-                <select className="input-field" value={createForm.size} onChange={e => setCreateForm({ ...createForm, size: e.target.value })}>
-                  <option value="SMALL">Small</option><option value="MEDIUM">Medium</option><option value="ENTERPRISE">Enterprise</option>
+                <select className="input-field" value={createForm.size} onChange={e => {
+                  const size = e.target.value;
+                  setCreateForm({ ...createForm, size, maxUsers: getMaxUsersBySize(size) });
+                }}>
+                  <option value="SMALL">Small (20)</option>
+                  <option value="MEDIUM">Medium (200)</option>
+                  <option value="ENTERPRISE">Enterprise (1,000)</option>
                 </select>
               </div>
             </div>
@@ -354,9 +364,18 @@ export default function AdminView() {
           <div><label className="form-label">รหัส *</label><input className="input-field" value={editForm.code} onChange={e => setEditForm({ ...editForm, code: e.target.value.toUpperCase() })} /></div>
           <div>
             <label className="form-label">ขนาดองค์กร</label>
-            <select className="input-field" value={editForm.size} onChange={e => setEditForm({ ...editForm, size: e.target.value })}>
-              <option value="SMALL">Small</option><option value="MEDIUM">Medium</option><option value="ENTERPRISE">Enterprise</option>
+            <select className="input-field" value={editForm.size} onChange={e => {
+              const size = e.target.value;
+              setEditForm({ ...editForm, size, maxUsers: getMaxUsersBySize(size) });
+            }}>
+              <option value="SMALL">Small (20)</option>
+              <option value="MEDIUM">Medium (200)</option>
+              <option value="ENTERPRISE">Enterprise (1,000)</option>
             </select>
+          </div>
+          <div>
+            <label className="form-label">จำกัดผู้ใช้ (กำหนดเอง)</label>
+            <input type="number" className="input-field" value={editForm.maxUsers} onChange={e => setEditForm({ ...editForm, maxUsers: parseInt(e.target.value) || 0 })} />
           </div>
           <div>
             <label className="form-label">สถานะการใช้งาน</label>
