@@ -16,6 +16,7 @@
   "nav.admin": "ผู้ดูแลระบบ",
   "nav.super_admin": "Super Admin",
   "nav.logout": "ออกจากระบบ",
+  "nav.change_password": "เปลี่ยนรหัสผ่าน",
   "login.org_code": "รหัสองค์กร (ไม่บังคับ)",
   "login.org_code_placeholder": "เช่น DEMO, COMPANY01",
   "login.email": "อีเมลระบบ",

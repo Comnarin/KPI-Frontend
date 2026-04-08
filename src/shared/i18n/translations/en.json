@@ -16,6 +16,7 @@
   "nav.admin": "Administration",
   "nav.super_admin": "Super Admin",
   "nav.logout": "Log Out",
+  "nav.change_password": "Change Password",
   "login.org_code": "Organization Code (Optional)",
   "login.org_code_placeholder": "e.g. DEMO, COMPANY01",
   "login.email": "Email",

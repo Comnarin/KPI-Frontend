@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAppStore } from '@/shared/stores/useAppStore';
@@ -18,7 +19,9 @@ import {
   UserCog,
   Lock,
   CalendarClock,
+  KeyRound,
 } from 'lucide-react';
+import ChangePasswordModal from './ChangePasswordModal';
 
 const NAV_ITEMS = [
   { labelKey: 'nav.dashboard', icon: LayoutDashboard, href: '/dashboard', perm: 'view_dashboard' },
@@ -59,6 +62,7 @@ export default function Sidebar() {
   const pathname = usePathname();
   const { user, hasPermission, logout } = useAppStore();
   const { t, locale, setLocale } = useTranslation();
+  const [isPwdModalOpen, setIsPwdModalOpen] = useState(false);
 
   const isSuperAdmin = user?.role === 'SUPERADMIN';
 
@@ -180,15 +184,26 @@ export default function Sidebar() {
                 <div className="text-slate-400 text-xs">{user.role}</div>
               </div>
             </div>
-            <button
-              onClick={logout}
-              className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/10 text-xs font-medium transition-all cursor-pointer"
-              style={{ border: 'none', background: 'none' }}
-            >
-              <LogOut size={14} />
-              {t('nav.logout')}
-            </button>
+            <div className="flex flex-col gap-1">
+              <button
+                onClick={() => setIsPwdModalOpen(true)}
+                className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-slate-400 hover:text-indigo-400 hover:bg-indigo-500/10 text-xs font-medium transition-all cursor-pointer"
+                style={{ border: 'none', background: 'none' }}
+              >
+                <KeyRound size={14} />
+                {t('nav.change_password')}
+              </button>
+              <button
+                onClick={logout}
+                className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/10 text-xs font-medium transition-all cursor-pointer"
+                style={{ border: 'none', background: 'none' }}
+              >
+                <LogOut size={14} />
+                {t('nav.logout')}
+              </button>
+            </div>
           </div>
+          <ChangePasswordModal open={isPwdModalOpen} onClose={() => setIsPwdModalOpen(false)} />
 
           <div className="text-center mt-3">
             <span className="text-slate-600 text-[10px]">V2.0 · © 2025 KPI Manager</span>
