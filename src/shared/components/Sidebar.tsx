@@ -67,8 +67,8 @@ export default function Sidebar() {
       {/* Logo */}
       <div className="px-6 pt-6 pb-4">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-indigo-500 flex items-center justify-center">
-            <Target size={18} className="text-white" />
+          <div className="w-10 h-10 rounded-xl bg-white overflow-hidden flex items-center justify-center shadow-sm border border-slate-700/50">
+            <img src="/logo.png" alt="Logo" className="w-full h-full object-cover" />
           </div>
           <div>
             <div className="text-white font-bold text-sm">{t('app.name')}</div>

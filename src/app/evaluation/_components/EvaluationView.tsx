@@ -342,7 +342,7 @@ export default function EvaluationView() {
   const isCEO = user?.role === 'CEO' || user?.role === 'SUPERADMIN';
   const isHR = user?.role === 'HR';
   const isHead = user?.role === 'HEAD_OF_DEPT';
-  const canSeeAll = isCEO || isHR;
+  const canSeeAll = isCEO;
 
   // ── New Evaluation Modal state ────────────────────────
   const [modalOpen, setModalOpen] = useState(false);

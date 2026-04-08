@@ -50,8 +50,8 @@ export default function LoginPage() {
         <div className="bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden">
           {/* Header */}
           <div className="pt-10 pb-6 px-8 text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-indigo-600 rounded-2xl mb-5 shadow-lg shadow-indigo-200">
-              <Target size={28} className="text-white" />
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-white rounded-2xl mb-5 shadow-lg shadow-indigo-100 p-1 border border-slate-100 overflow-hidden">
+              <img src="/logo.png" alt="KPI Manager Logo" className="w-full h-full object-cover rounded-xl" />
             </div>
             <h1 className="text-2xl font-bold text-slate-800">{t('login.title')}</h1>
             <p className="text-slate-500 text-sm mt-1">{t('login.description')}</p>
