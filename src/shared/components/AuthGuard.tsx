@@ -24,7 +24,7 @@ const ROUTE_PERMISSIONS: Record<string, string> = {
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { isAuthenticated, loading, loadFromBackend, user, hasPermission } = useAppStore();
+  const { isAuthenticated, loading, loadFromBackend, user, hasPermission, permissions } = useAppStore();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -44,6 +44,9 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   // Permission-based route protection
   useEffect(() => {
     if (!mounted || !isAuthenticated || !user) return;
+    
+    // If we're still loading permissions for a non-SuperAdmin, wait
+    if (loading && permissions.length === 0 && user.role !== 'SUPERADMIN') return;
 
     const requiredPerm = ROUTE_PERMISSIONS[pathname];
     if (!requiredPerm) return; // No permission needed (e.g. /, unknown routes)

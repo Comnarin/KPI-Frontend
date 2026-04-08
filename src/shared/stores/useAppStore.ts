@@ -103,6 +103,7 @@ export const useAppStore = create<AppState>()(
           set({ permissions: perms });
         } catch {
           console.warn('Failed to load permissions', tenantId);
+          set({ permissions: [] });
         }
       },
 

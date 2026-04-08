@@ -60,7 +60,7 @@ function NavLink({ href, icon: Icon, label, isActive, iconActiveClass }: {
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const { user, hasPermission, logout } = useAppStore();
+  const { user, hasPermission, logout, permissions, loading } = useAppStore();
   const { t, locale, setLocale } = useTranslation();
   const [isPwdModalOpen, setIsPwdModalOpen] = useState(false);
 
@@ -90,15 +90,25 @@ export default function Sidebar() {
               {t('nav.main_menu')}
             </div>
             <div className="flex flex-col gap-0.5">
-              {NAV_ITEMS.filter((item) => hasPermission(item.perm)).map((item) => (
-                <NavLink
-                  key={item.href}
-                  href={item.href}
-                  icon={item.icon}
-                  label={t(item.labelKey)}
-                  isActive={pathname === item.href}
-                />
-              ))}
+              {loading && permissions.length === 0 ? (
+                // Skeleton loading state
+                [1, 2, 3].map((i) => (
+                  <div key={i} className="flex items-center gap-3 px-3 py-2.5 animate-pulse">
+                    <div className="w-5 h-5 bg-slate-700/50 rounded-md" />
+                    <div className="h-4 bg-slate-700/50 rounded-md flex-1" />
+                  </div>
+                ))
+              ) : (
+                NAV_ITEMS.filter((item) => hasPermission(item.perm)).map((item) => (
+                  <NavLink
+                    key={item.href}
+                    href={item.href}
+                    icon={item.icon}
+                    label={t(item.labelKey)}
+                    isActive={pathname === item.href}
+                  />
+                ))
+              )}
             </div>
 
             {/* Administration section — accounts & permissions */}

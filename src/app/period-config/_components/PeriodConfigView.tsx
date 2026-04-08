@@ -34,7 +34,7 @@ function getDaysRemaining(periodEnd?: string): number | null {
 
 export default function PeriodConfigView() {
   const { t, locale } = useTranslation();
-  const { hasPermission } = useAppStore();
+  const { hasPermission, permissions } = useAppStore();
   const { periods, activePeriod, isLoading, createPeriod, updatePeriod, deletePeriod, setActivePeriod } = usePeriods();
 
   const formatDate = (dateStr?: string) => {
