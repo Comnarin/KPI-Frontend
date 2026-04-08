@@ -5,7 +5,7 @@ export interface ApiError extends Error {
 export class ApiClient {
     private baseUrl: string;
 
-    constructor(baseUrl: string = 'http://localhost:4000/api') {
+    constructor(baseUrl: string) {
         this.baseUrl = baseUrl;
     }
 
@@ -75,4 +75,8 @@ export class ApiClient {
     }
 }
 
-export const api = new ApiClient();
+const defaultBaseUrl = process.env.NEXT_PUBLIC_API_URL 
+    ? `${process.env.NEXT_PUBLIC_API_URL}/api` 
+    : 'http://localhost:4000/api';
+
+export const api = new ApiClient(defaultBaseUrl);
