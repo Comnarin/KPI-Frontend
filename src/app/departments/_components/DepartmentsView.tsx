@@ -92,7 +92,7 @@ export default function DepartmentsView() {
             </thead>
             <tbody>
               {filtered.map(dept => {
-                const empCount = employees.filter(e => e.department === dept.name).length;
+                const empCount = employees.filter(e => e.departmentId === dept.id).length;
                 return (
                   <tr key={dept.id}>
                     <td>
