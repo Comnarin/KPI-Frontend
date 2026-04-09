@@ -496,7 +496,7 @@ export default function EvaluationView() {
             >
               <option value="">ทุกแผนก</option>
               {departments.map(d => (
-                <option key={d.id} value={d.name}>{d.name}</option>
+                <option key={d.id} value={d.id}>{d.name}</option>
               ))}
             </select>
           )}

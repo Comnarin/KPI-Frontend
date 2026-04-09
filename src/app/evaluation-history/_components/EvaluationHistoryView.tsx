@@ -85,7 +85,7 @@ export default function EvaluationHistoryView() {
           >
             <option value="">{t('evaluation_history.all_departments')}</option>
             {departments.map((d) => (
-              <option key={d.id} value={d.name}>
+              <option key={d.id} value={d.id}>
                 {d.name}
               </option>
             ))}
@@ -144,7 +144,7 @@ export default function EvaluationHistoryView() {
                       </div>
                     </td>
                     <td className="text-sm text-slate-500">
-                      {emp?.department || '-'}
+                      {emp?.department?.name || '-'}
                     </td>
                     <td className="text-sm text-slate-500">{ev.period}</td>
                     <td>

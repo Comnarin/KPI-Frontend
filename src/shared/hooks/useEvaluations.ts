@@ -11,7 +11,7 @@ export interface UseEvaluationsOptions {
 export function useEvaluations(options?: UseEvaluationsOptions) {
   const params = new URLSearchParams();
   if (options?.q) params.append('q', options.q);
-  if (options?.department) params.append('department', options.department);
+  if (options?.department) params.append('departmentId', options.department);
   if (options?.period) params.append('period', options.period);
   const qStr = params.toString();
   const url = qStr ? `/evaluations?${qStr}` : '/evaluations';
