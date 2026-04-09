@@ -6,6 +6,7 @@ export interface UseEvaluationsOptions {
   q?: string;
   department?: string;
   period?: string;
+  summary?: boolean;
 }
 
 export function useEvaluations(options?: UseEvaluationsOptions) {
@@ -13,6 +14,7 @@ export function useEvaluations(options?: UseEvaluationsOptions) {
   if (options?.q) params.append('q', options.q);
   if (options?.department) params.append('departmentId', options.department);
   if (options?.period) params.append('period', options.period);
+  if (options?.summary) params.append('summary', 'true');
   const qStr = params.toString();
   const url = qStr ? `/evaluations?${qStr}` : '/evaluations';
   const { data, error, isLoading, mutate } = useSWR<KPIEvaluation[]>(url, (url: string) => api.get<KPIEvaluation[]>(url));

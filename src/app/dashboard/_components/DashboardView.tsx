@@ -5,7 +5,6 @@ import { useState } from 'react';
 import useSWR from 'swr';
 import { api } from '@/shared/api';
 import { useAppStore } from '@/shared/stores/useAppStore';
-import { usePeriods } from '@/shared/hooks/usePeriods';
 import { useTranslation } from '@/shared/i18n/provider';
 import PageHeader from '@/shared/components/PageHeader';
 import { LayoutDashboard, Users, ClipboardCheck, TrendingUp, DollarSign, AlertCircle, Award, Calendar, ChevronDown, Check } from 'lucide-react';
@@ -50,9 +49,15 @@ interface DashboardStats {
     firstName: string;
     lastName: string;
     position: string;
+    departmentName: string;
     totalScore: number;
     ratingLevel: string;
     evaluatedAt: string;
+  }[];
+  periods: {
+    id: string;
+    label: string;
+    isActive: boolean;
   }[];
 }
 
@@ -62,7 +67,6 @@ export default function DashboardView() {
   const isCEO = user?.role === 'CEO' || user?.role === 'SUPERADMIN';
   const period = `${new Date().getFullYear()} - Q${Math.ceil((new Date().getMonth() + 1) / 3)}`;
 
-  const { periods } = usePeriods();
   const [periodFilter, setPeriodFilter] = useState('');
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
@@ -71,6 +75,8 @@ export default function DashboardView() {
     fetcher
   );
 
+  // periods come from the dashboard stats response — no separate /periods call needed
+  const periods = stats?.periods ?? [];
   const totalBudget = stats?.totalSalaryBudget ?? 0;
 
   if (isLoading) {
@@ -254,6 +260,7 @@ export default function DashboardView() {
                 <tr>
                   <th>{t('common.employee')}</th>
                   <th>{t('common.position')}</th>
+                  <th>{t('common.department')}</th>
                   <th>{t('common.score')}</th>
                   <th>{t('common.rating')}</th>
                 </tr>
@@ -271,6 +278,7 @@ export default function DashboardView() {
                         </div>
                       </td>
                       <td className="text-slate-500 text-sm">{ev.position}</td>
+                      <td className="text-slate-400 text-xs">{ev.departmentName || '-'}</td>
                       <td>
                         <span className="text-lg font-bold" style={{ color: SCORE_COLOR(ev.totalScore) }}>
                           {ev.totalScore}

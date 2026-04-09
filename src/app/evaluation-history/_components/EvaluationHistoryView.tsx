@@ -2,7 +2,6 @@
 
 import { useState, useMemo } from 'react';
 import { useAppStore } from '@/shared/stores/useAppStore';
-import { useEmployees } from '@/shared/hooks/useEmployees';
 import { useEvaluations } from '@/shared/hooks/useEvaluations';
 import { useDebounce } from '@/shared/hooks/useDebounce';
 import { useDepartments } from '@/shared/hooks/useDepartments';
@@ -11,7 +10,7 @@ import PageHeader from '@/shared/components/PageHeader';
 import SearchInput from '@/shared/components/SearchInput';
 import EmptyState from '@/shared/components/EmptyState';
 import { History, Trash2 } from 'lucide-react';
-import { getRatingLevel, getRatingBg, getAvatarColor, getEmployeeInitials } from '@/shared/lib/data';
+import { getRatingLevel, getRatingBg, getAvatarColor } from '@/shared/lib/data';
 import { useTranslation } from '@/shared/i18n/provider';
 
 export default function EvaluationHistoryView() {
@@ -22,11 +21,11 @@ export default function EvaluationHistoryView() {
   const [periodFilter, setPeriodFilter] = useState('');
   const debouncedSearch = useDebounce(search, 300);
 
-  const { employees, isLoading: isEmpLoading } = useEmployees();
   const { evaluations, deleteEvaluation, isLoading: isEvalLoading } = useEvaluations({
     q: debouncedSearch,
     department: deptFilter,
     period: periodFilter,
+    summary: true,
   });
   const { departments, isLoading: isDeptLoading } = useDepartments();
   const { periods, isLoading: isPeriodLoading } = usePeriods();
@@ -94,7 +93,7 @@ export default function EvaluationHistoryView() {
       </div>
 
       {/* Table */}
-      {isEmpLoading || isEvalLoading || isDeptLoading || isPeriodLoading ? (
+      {isEvalLoading || isDeptLoading || isPeriodLoading ? (
         <div className="card-static p-12 flex justify-center items-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
         </div>
@@ -116,10 +115,8 @@ export default function EvaluationHistoryView() {
             </thead>
             <tbody>
               {visibleEvaluations.map((ev, idx) => {
-                const emp = employees.find((e) => e.id === ev.employeeId);
-                const name = emp
-                  ? `${emp.firstName} ${emp.lastName}`
-                  : ev.employeeName || '-';
+                const name = ev.employeeName || '-';
+                const initials = name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
                 const rating = getRatingLevel(ev.totalScore);
                 const dateStr = ev.createdAt
                   ? new Date(ev.createdAt).toLocaleDateString('th-TH', {
@@ -133,18 +130,16 @@ export default function EvaluationHistoryView() {
                   <tr key={ev.id || idx}>
                     <td>
                       <div className="flex items-center gap-3">
-                        {emp && (
-                          <div
-                            className={`avatar avatar-sm bg-gradient-to-br ${getAvatarColor(emp.id)}`}
-                          >
-                            {getEmployeeInitials(emp)}
-                          </div>
-                        )}
+                        <div
+                          className={`avatar avatar-sm bg-gradient-to-br ${getAvatarColor(ev.employeeId)}`}
+                        >
+                          {initials}
+                        </div>
                         <span className="font-medium text-slate-800">{name}</span>
                       </div>
                     </td>
                     <td className="text-sm text-slate-500">
-                      {emp?.department?.name || '-'}
+                      {ev.departmentName || '-'}
                     </td>
                     <td className="text-sm text-slate-500">{ev.period}</td>
                     <td>

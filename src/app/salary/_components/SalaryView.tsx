@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useAppStore } from '@/shared/stores/useAppStore';
 import { useEmployees } from '@/shared/hooks/useEmployees';
 import { usePeriods } from '@/shared/hooks/usePeriods';
@@ -34,7 +34,8 @@ export default function SalaryView() {
   const { user } = useAppStore();
   const { adjustments: salaryAdjustments, addAdjustment, isLoading: isAdjLoading } = useSalaryAdjustments();
   const { employees: allEmployees, isLoading: isEmpLoading } = useEmployees();
-  const { employees: activeEmployees } = useEmployees({ status: 'ACTIVE' });
+  // Derive active employees from the single fetch instead of making a second API call
+  const activeEmployees = useMemo(() => allEmployees.filter(e => e.status === 'ACTIVE'), [allEmployees]);
   const [period, setPeriod] = useState('');
 
   const { periods, activePeriod, isLoading: isPeriodLoading } = usePeriods();
@@ -130,211 +131,211 @@ export default function SalaryView() {
         </div>
       ) : !salarySettings ? null : (
         <div className="grid grid-cols-3 gap-6">
-        {/* Calculator Panel */}
-        <div className="col-span-2">
-          <div className="card-static p-7">
-            <h2 className="text-base font-semibold text-slate-800 mb-6">{t('salary.calculator')}</h2>
+          {/* Calculator Panel */}
+          <div className="col-span-2">
+            <div className="card-static p-7">
+              <h2 className="text-base font-semibold text-slate-800 mb-6">{t('salary.calculator')}</h2>
 
-            <div className="grid grid-cols-2 gap-4 mb-5">
-              <div>
-                <label className="form-label">{t('salary.select_employee')}</label>
-                <select className="input-field" value={selectedEmp} onChange={(e) => setSelectedEmp(e.target.value)}>
-                  <option value="">{t('salary.select_employee_placeholder')}</option>
-                  {activeEmployees.map(emp => {
-                    const score = periodEvalMap.get(emp.id);
-                    const isAlreadyAdjusted = salaryAdjustments.some(adj => adj.employeeId === emp.id && adj.period === period);
+              <div className="grid grid-cols-2 gap-4 mb-5">
+                <div>
+                  <label className="form-label">{t('salary.select_employee')}</label>
+                  <select className="input-field" value={selectedEmp} onChange={(e) => setSelectedEmp(e.target.value)}>
+                    <option value="">{t('salary.select_employee_placeholder')}</option>
+                    {activeEmployees.map(emp => {
+                      const score = periodEvalMap.get(emp.id);
+                      const isAlreadyAdjusted = salaryAdjustments.some(adj => adj.employeeId === emp.id && adj.period === period);
+                      return (
+                        <option key={emp.id} value={emp.id} disabled={isAlreadyAdjusted}>
+                          {emp.firstName} {emp.lastName} {isAlreadyAdjusted ? `(${t('salary.already_adjusted')})` : score !== undefined ? `(คะแนน: ${score})` : `(${t('salary.not_evaluated')})`}
+                        </option>
+                      );
+                    })}
+                  </select>
+                </div>
+                <div>
+                  <label className="form-label">{t('salary.period')}</label>
+                  <select className="input-field" value={period} onChange={(e) => setPeriod(e.target.value)}>
+                    {periods.map(p => <option key={p.id} value={p.label}>{p.label}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                <div>
+                  <label className="form-label">{t('salary.market_adj')}: {marketCorr}%</label>
+                  <input type="range" min={0} max={10} step={0.5} value={marketCorr} onChange={(e) => setMarketCorr(+e.target.value)}
+                    className="w-full mt-1.5" />
+                </div>
+                <div>
+                  <label className="form-label">{t('salary.col_adj')}: {col}%</label>
+                  <input type="range" min={0} max={10} step={0.5} value={col} onChange={(e) => setCol(+e.target.value)}
+                    className="w-full mt-1.5" />
+                </div>
+              </div>
+
+              {empForCalc && calc ? (
+                <div>
+                  {/* Employee header */}
+                  <div className="flex items-center gap-3 mb-6 p-4 bg-slate-50 rounded-xl">
+                    <div className={`avatar avatar-lg bg-gradient-to-br ${getAvatarColor(empForCalc.id)}`}>
+                      {getEmployeeInitials(empForCalc)}
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-semibold text-slate-800">{empForCalc.firstName} {empForCalc.lastName}</div>
+                      <div className="text-xs text-slate-500">{empForCalc.position} · {empForCalc.department?.name || '-'}</div>
+                    </div>
+                    {empScore !== null && (
+                      <div className="text-right">
+                        <div className="text-3xl font-extrabold" style={{ color: SCORE_COLOR(empScore) }}>{empScore}</div>
+                        <span className={`badge ${getRatingBg(getRatingLevel(empScore))}`}>{getRatingLevel(empScore)}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 3P Breakdown */}
+                  <div className="mb-6">
+                    <div className="section-label">{t('salary.structure_3p')}</div>
+                    <div className="space-y-2">
+                      {[
+                        { label: t('salary.p1_label'), val: empForCalc.baseSalary, color: 'text-indigo-600' },
+                        { label: t('salary.p2_label'), val: empForCalc.personalCapacity, color: 'text-blue-600' },
+                        { label: t('salary.p3_label'), val: calc.p3Amount, color: 'text-emerald-600' },
+                      ].map(item => (
+                        <div key={item.label} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
+                          <span className="text-sm text-slate-600">{item.label}</span>
+                          <span className={`font-bold ${item.color}`}>{formatCurrency(item.val)}</span>
+                        </div>
+                      ))}
+                      <div className="flex items-center justify-between p-3.5 bg-indigo-50 border border-indigo-100 rounded-xl">
+                        <span className="font-semibold text-slate-800">{t('salary.total_salary')}</span>
+                        <span className="font-extrabold text-indigo-600">{formatCurrency(calc.currentSalary + calc.p3Amount)}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Adjustment breakdown */}
+                  <div className="mb-6">
+                    <div className="section-label">{t('salary.annual_adj')}</div>
+                    <div className="grid grid-cols-4 gap-3">
+                      {[
+                        { label: t('salary.merit_kpi'), val: `+${calc.meritPercent}%`, color: 'text-emerald-600' },
+                        { label: t('salary.tenure'), val: `+${calc.tenureBonus.toFixed(1)}%`, color: 'text-blue-600' },
+                        { label: t('salary.market'), val: `+${marketCorr}%`, color: 'text-amber-600' },
+                        { label: t('salary.cost_of_living'), val: `+${col}%`, color: 'text-orange-600' },
+                      ].map(item => (
+                        <div key={item.label} className="bg-slate-50 rounded-xl p-3 text-center">
+                          <div className={`text-lg font-bold ${item.color}`}>{item.val}</div>
+                          <div className="text-xs text-slate-400 mt-1">{item.label}</div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex items-center gap-2 mt-3 p-2.5 bg-blue-50 rounded-lg border border-blue-100">
+                      <Info size={14} className="text-blue-500" />
+                      <span className="text-xs text-slate-500">
+                        คำนวณอายุงาน {empForCalc.yearsOfService} ปี ({salarySettings.tenureRatePerYear}% ต่อปี, สูงสุดไม่เกิน {salarySettings.maxTenureBonus}%)
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Final result */}
+                  <div className="p-5 bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-100 rounded-2xl mb-5">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="text-xs text-slate-500 mb-1">{t('salary.current')}</div>
+                        <div className="text-lg font-bold text-slate-700">{formatCurrency(calc.currentSalary)}</div>
+                      </div>
+                      <TrendingUp size={24} className="text-indigo-400" />
+                      <div className="text-right">
+                        <div className="text-xs text-slate-500 mb-1">{t('salary.recommended')}</div>
+                        <div className="text-2xl font-extrabold gradient-text">{formatCurrency(calc.recommendedSalary)}</div>
+                        <div className="text-xs text-emerald-600 mt-0.5">
+                          +{formatCurrency(calc.recommendedSalary - calc.currentSalary)} (+{calc.totalAdjustmentPercent.toFixed(1)}%)
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <button className="btn-primary w-full py-3.5 text-base" onClick={handleApprove}>
+                    <CheckCircle size={18} /> {t('salary.approve')}
+                  </button>
+                </div>
+              ) : empForCalc && empScore === null ? (
+                <div className="py-12 text-center">
+                  <AlertCircle size={32} className="text-red-400 mx-auto mb-2" />
+                  <p className="text-sm text-red-500">{t('salary.not_evaluated_msg')}</p>
+                </div>
+              ) : (
+                <div className="py-12 text-center">
+                  <Banknote size={40} className="text-slate-300 mx-auto mb-3" />
+                  <p className="text-sm text-slate-400">{t('salary.select_employee_msg')}</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Right panel */}
+          <div className="space-y-5">
+            {/* Approved history */}
+            <div className="card-static p-5">
+              <h2 className="text-sm font-semibold text-slate-800 mb-4">{t('salary.approved_history')}</h2>
+              {salaryAdjustments.length === 0 ? (
+                <div className="text-center text-slate-400 py-8">
+                  <AlertCircle size={28} className="mx-auto mb-2 opacity-40" />
+                  <p className="text-xs">{t('salary.no_approvals')}</p>
+                </div>
+              ) : (
+                <div className="space-y-2.5">
+                  {salaryAdjustments.slice(-6).reverse().map((adj) => {
+                    const emp = allEmployees.find(e => e.id === adj.employeeId);
+                    if (!emp) return null;
                     return (
-                      <option key={emp.id} value={emp.id} disabled={isAlreadyAdjusted}>
-                        {emp.firstName} {emp.lastName} {isAlreadyAdjusted ? `(${t('salary.already_adjusted')})` : score !== undefined ? `(คะแนน: ${score})` : `(${t('salary.not_evaluated')})`}
-                      </option>
+                      <div key={adj.id} className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className={`avatar avatar-sm bg-gradient-to-br ${getAvatarColor(emp.id)}`} style={{ width: 28, height: 28, fontSize: '0.65rem' }}>
+                            {getEmployeeInitials(emp)}
+                          </div>
+                          <div className="flex-1">
+                            <div className="text-xs font-medium text-slate-700">{emp.firstName} {emp.lastName}</div>
+                            <div className="text-[10px] text-slate-400">{adj.period}</div>
+                          </div>
+                          <button onClick={() => handleDownloadPDF(adj)} title="ดาวน์โหลดเอกสาร PDF"
+                            className="btn-icon text-xs" style={{ padding: '3px 6px' }}>
+                            <Download size={12} /> PDF
+                          </button>
+                        </div>
+                        <div className="flex justify-between text-xs">
+                          <span className="text-slate-400">{formatCurrency(adj.currentSalary)}</span>
+                          <span className="text-emerald-600 font-semibold">→ {formatCurrency(adj.recommendedSalary)}</span>
+                        </div>
+                      </div>
                     );
                   })}
-                </select>
-              </div>
-              <div>
-                <label className="form-label">{t('salary.period')}</label>
-                <select className="input-field" value={period} onChange={(e) => setPeriod(e.target.value)}>
-                  {periods.map(p => <option key={p.id} value={p.label}>{p.label}</option>)}
-                </select>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              <div>
-                <label className="form-label">{t('salary.market_adj')}: {marketCorr}%</label>
-                <input type="range" min={0} max={10} step={0.5} value={marketCorr} onChange={(e) => setMarketCorr(+e.target.value)}
-                  className="w-full mt-1.5" />
-              </div>
-              <div>
-                <label className="form-label">{t('salary.col_adj')}: {col}%</label>
-                <input type="range" min={0} max={10} step={0.5} value={col} onChange={(e) => setCol(+e.target.value)}
-                  className="w-full mt-1.5" />
-              </div>
-            </div>
-
-            {empForCalc && calc ? (
-              <div>
-                {/* Employee header */}
-                <div className="flex items-center gap-3 mb-6 p-4 bg-slate-50 rounded-xl">
-                  <div className={`avatar avatar-lg bg-gradient-to-br ${getAvatarColor(empForCalc.id)}`}>
-                    {getEmployeeInitials(empForCalc)}
-                  </div>
-                  <div className="flex-1">
-                    <div className="font-semibold text-slate-800">{empForCalc.firstName} {empForCalc.lastName}</div>
-                    <div className="text-xs text-slate-500">{empForCalc.position} · {empForCalc.department?.name || '-'}</div>
-                  </div>
-                  {empScore !== null && (
-                    <div className="text-right">
-                      <div className="text-3xl font-extrabold" style={{ color: SCORE_COLOR(empScore) }}>{empScore}</div>
-                      <span className={`badge ${getRatingBg(getRatingLevel(empScore))}`}>{getRatingLevel(empScore)}</span>
+                  {salaryAdjustments.length > 0 && (
+                    <div className="p-3 bg-indigo-50 rounded-xl border border-indigo-100">
+                      <div className="text-[10px] text-slate-500 mb-1">งบเพิ่มเติมทั้งหมด</div>
+                      <div className="text-sm font-bold text-indigo-600">+{formatCurrency(totalBudgetIncrease)}</div>
+                      <div className="text-[10px] text-slate-400">ต่อเดือน</div>
                     </div>
                   )}
                 </div>
+              )}
+            </div>
 
-                {/* 3P Breakdown */}
-                <div className="mb-6">
-                  <div className="section-label">{t('salary.structure_3p')}</div>
-                  <div className="space-y-2">
-                    {[
-                      { label: t('salary.p1_label'), val: empForCalc.baseSalary, color: 'text-indigo-600' },
-                      { label: t('salary.p2_label'), val: empForCalc.personalCapacity, color: 'text-blue-600' },
-                      { label: t('salary.p3_label'), val: calc.p3Amount, color: 'text-emerald-600' },
-                    ].map(item => (
-                      <div key={item.label} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
-                        <span className="text-sm text-slate-600">{item.label}</span>
-                        <span className={`font-bold ${item.color}`}>{formatCurrency(item.val)}</span>
-                      </div>
-                    ))}
-                    <div className="flex items-center justify-between p-3.5 bg-indigo-50 border border-indigo-100 rounded-xl">
-                      <span className="font-semibold text-slate-800">{t('salary.total_salary')}</span>
-                      <span className="font-extrabold text-indigo-600">{formatCurrency(calc.currentSalary + calc.p3Amount)}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Adjustment breakdown */}
-                <div className="mb-6">
-                  <div className="section-label">{t('salary.annual_adj')}</div>
-                  <div className="grid grid-cols-4 gap-3">
-                    {[
-                      { label: t('salary.merit_kpi'), val: `+${calc.meritPercent}%`, color: 'text-emerald-600' },
-                      { label: t('salary.tenure'), val: `+${calc.tenureBonus.toFixed(1)}%`, color: 'text-blue-600' },
-                      { label: t('salary.market'), val: `+${marketCorr}%`, color: 'text-amber-600' },
-                      { label: t('salary.cost_of_living'), val: `+${col}%`, color: 'text-orange-600' },
-                    ].map(item => (
-                      <div key={item.label} className="bg-slate-50 rounded-xl p-3 text-center">
-                        <div className={`text-lg font-bold ${item.color}`}>{item.val}</div>
-                        <div className="text-xs text-slate-400 mt-1">{item.label}</div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="flex items-center gap-2 mt-3 p-2.5 bg-blue-50 rounded-lg border border-blue-100">
-                    <Info size={14} className="text-blue-500" />
-                    <span className="text-xs text-slate-500">
-                      คำนวณอายุงาน {empForCalc.yearsOfService} ปี ({salarySettings.tenureRatePerYear}% ต่อปี, สูงสุดไม่เกิน {salarySettings.maxTenureBonus}%)
+            {/* Merit table guide */}
+            <div className="card-static p-5">
+              <div className="section-label mb-3">{t('salary.merit_table')}</div>
+              <div className="space-y-2">
+                {ratingLevels.map((level) => (
+                  <div key={level} className="flex items-center justify-between py-1">
+                    <span className="text-sm text-slate-600">{level}</span>
+                    <span className={`text-sm font-bold ${salarySettings.meritMap[level] > 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                      +{salarySettings.meritMap[level]}%
                     </span>
                   </div>
-                </div>
-
-                {/* Final result */}
-                <div className="p-5 bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-100 rounded-2xl mb-5">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="text-xs text-slate-500 mb-1">{t('salary.current')}</div>
-                      <div className="text-lg font-bold text-slate-700">{formatCurrency(calc.currentSalary)}</div>
-                    </div>
-                    <TrendingUp size={24} className="text-indigo-400" />
-                    <div className="text-right">
-                      <div className="text-xs text-slate-500 mb-1">{t('salary.recommended')}</div>
-                      <div className="text-2xl font-extrabold gradient-text">{formatCurrency(calc.recommendedSalary)}</div>
-                      <div className="text-xs text-emerald-600 mt-0.5">
-                        +{formatCurrency(calc.recommendedSalary - calc.currentSalary)} (+{calc.totalAdjustmentPercent.toFixed(1)}%)
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <button className="btn-primary w-full py-3.5 text-base" onClick={handleApprove}>
-                  <CheckCircle size={18} /> {t('salary.approve')}
-                </button>
+                ))}
               </div>
-            ) : empForCalc && empScore === null ? (
-              <div className="py-12 text-center">
-                <AlertCircle size={32} className="text-red-400 mx-auto mb-2" />
-                <p className="text-sm text-red-500">{t('salary.not_evaluated_msg')}</p>
-              </div>
-            ) : (
-              <div className="py-12 text-center">
-                <Banknote size={40} className="text-slate-300 mx-auto mb-3" />
-                <p className="text-sm text-slate-400">{t('salary.select_employee_msg')}</p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Right panel */}
-        <div className="space-y-5">
-          {/* Approved history */}
-          <div className="card-static p-5">
-            <h2 className="text-sm font-semibold text-slate-800 mb-4">{t('salary.approved_history')}</h2>
-            {salaryAdjustments.length === 0 ? (
-              <div className="text-center text-slate-400 py-8">
-                <AlertCircle size={28} className="mx-auto mb-2 opacity-40" />
-                <p className="text-xs">{t('salary.no_approvals')}</p>
-              </div>
-            ) : (
-              <div className="space-y-2.5">
-                {salaryAdjustments.slice(-6).reverse().map((adj) => {
-                  const emp = allEmployees.find(e => e.id === adj.employeeId);
-                  if (!emp) return null;
-                  return (
-                    <div key={adj.id} className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className={`avatar avatar-sm bg-gradient-to-br ${getAvatarColor(emp.id)}`} style={{ width: 28, height: 28, fontSize: '0.65rem' }}>
-                          {getEmployeeInitials(emp)}
-                        </div>
-                        <div className="flex-1">
-                          <div className="text-xs font-medium text-slate-700">{emp.firstName} {emp.lastName}</div>
-                          <div className="text-[10px] text-slate-400">{adj.period}</div>
-                        </div>
-                        <button onClick={() => handleDownloadPDF(adj)} title="ดาวน์โหลดเอกสาร PDF"
-                          className="btn-icon text-xs" style={{ padding: '3px 6px' }}>
-                          <Download size={12} /> PDF
-                        </button>
-                      </div>
-                      <div className="flex justify-between text-xs">
-                        <span className="text-slate-400">{formatCurrency(adj.currentSalary)}</span>
-                        <span className="text-emerald-600 font-semibold">→ {formatCurrency(adj.recommendedSalary)}</span>
-                      </div>
-                    </div>
-                  );
-                })}
-                {salaryAdjustments.length > 0 && (
-                  <div className="p-3 bg-indigo-50 rounded-xl border border-indigo-100">
-                    <div className="text-[10px] text-slate-500 mb-1">งบเพิ่มเติมทั้งหมด</div>
-                    <div className="text-sm font-bold text-indigo-600">+{formatCurrency(totalBudgetIncrease)}</div>
-                    <div className="text-[10px] text-slate-400">ต่อเดือน</div>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Merit table guide */}
-          <div className="card-static p-5">
-            <div className="section-label mb-3">{t('salary.merit_table')}</div>
-            <div className="space-y-2">
-              {ratingLevels.map((level) => (
-                <div key={level} className="flex items-center justify-between py-1">
-                  <span className="text-sm text-slate-600">{level}</span>
-                  <span className={`text-sm font-bold ${salarySettings.meritMap[level] > 0 ? 'text-emerald-600' : 'text-red-500'}`}>
-                    +{salarySettings.meritMap[level]}%
-                  </span>
-                </div>
-              ))}
             </div>
           </div>
-        </div>
         </div>
       )}
 

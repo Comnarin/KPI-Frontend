@@ -24,7 +24,8 @@ export class ApiClient {
 
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
-            const error = new Error(errorData.message || response.statusText) as ApiError;
+            const message = errorData.error || errorData.message || response.statusText;
+            const error = new Error(message) as ApiError;
             error.status = response.status;
             throw error;
         }
@@ -75,8 +76,8 @@ export class ApiClient {
     }
 }
 
-const defaultBaseUrl = process.env.NEXT_PUBLIC_API_URL 
-    ? `${process.env.NEXT_PUBLIC_API_URL}/api` 
+const defaultBaseUrl = process.env.NEXT_PUBLIC_API_URL
+    ? `${process.env.NEXT_PUBLIC_API_URL}/api`
     : 'http://localhost:4000/api';
 
 export const api = new ApiClient(defaultBaseUrl);

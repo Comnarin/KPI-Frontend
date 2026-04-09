@@ -318,9 +318,8 @@ function ScoreDetailModal({
 // ─── Main View ────────────────────────────────────────────────────────────────
 export default function EvaluationView() {
   const { user } = useAppStore();
-  const { activePeriod } = usePeriods();
-  const { employees: allEmployees, isLoading: isEmpLoading } = useEmployees();
-  const { employees: activeEmployees } = useEmployees({
+  const { activePeriod, isLoading: isPeriodLoading } = usePeriods();
+  const { employees: activeEmployees, isLoading: isEmpLoading } = useEmployees({
     status: 'ACTIVE',
     excludeEvaluatedPeriod: activePeriod?.label,
     evaluatorId: user?.id
@@ -336,7 +335,6 @@ export default function EvaluationView() {
     period: periodFilter,
   });
   const { departments, isLoading: isDeptLoading } = useDepartments();
-  const { activePeriod: activePeriodData, isLoading: isPeriodLoading } = usePeriods();
   const { t } = useTranslation();
 
   const isCEO = user?.role === 'CEO' || user?.role === 'SUPERADMIN';
@@ -359,8 +357,7 @@ export default function EvaluationView() {
     if (search.trim()) {
       const q = search.toLowerCase();
       evals = evals.filter(ev => {
-        const emp = allEmployees.find(e => e.id === ev.employeeId);
-        const name = (emp ? `${emp.firstName} ${emp.lastName}` : ev.employeeName || '').toLowerCase();
+        const name = (ev.employeeName || '').toLowerCase();
         const evaluator = (ev.evaluatorName || '').toLowerCase();
         return name.includes(q) || evaluator.includes(q);
       });
@@ -371,7 +368,7 @@ export default function EvaluationView() {
       const db = b.createdAt ? new Date(b.createdAt).getTime() : 0;
       return db - da;
     });
-  }, [evaluations, search, allEmployees]);
+  }, [evaluations, search]);
 
   // ── Employee list (Filtered by backend + Head of Dept scope) ──
   const availableEmployees = useMemo(() => {
@@ -441,6 +438,8 @@ export default function EvaluationView() {
   const selectedTemplate = templates.find(t => t.id === selTemplate);
   const isLoading = isEmpLoading || isTplLoading || isEvalLoading || isDeptLoading || isPeriodLoading;
   const noPeriod = !isLoading && !activePeriod;
+  // Helper to generate initials from a full name string
+  const getInitials = (name: string) => name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
 
   const uniquePeriods = useMemo(() => {
     const periods = new Set(evaluations.map(e => e.period).filter(Boolean));
@@ -539,8 +538,7 @@ export default function EvaluationView() {
               </thead>
               <tbody>
                 {visibleEvaluations.map((ev, idx) => {
-                  const emp = allEmployees.find(e => e.id === ev.employeeId);
-                  const name = emp ? `${emp.firstName} ${emp.lastName}` : ev.employeeName || '-';
+                  const name = ev.employeeName || '-';
                   const rating = (ev.ratingLevel || getRatingLevel(ev.totalScore)) as RatingLevel;
                   const dateStr = ev.createdAt
                     ? new Date(ev.createdAt).toLocaleDateString('th-TH', { month: 'short', day: 'numeric', year: '2-digit' })
@@ -556,15 +554,13 @@ export default function EvaluationView() {
                       {/* Employee */}
                       <td>
                         <div className="flex items-center gap-3">
-                          {emp && (
-                            <div className={`avatar avatar-sm bg-gradient-to-br ${getAvatarColor(emp.id)}`}>
-                              {getEmployeeInitials(emp)}
-                            </div>
-                          )}
+                          <div className={`avatar avatar-sm bg-gradient-to-br ${getAvatarColor(ev.employeeId)}`}>
+                            {getInitials(name)}
+                          </div>
                           <span className="font-medium text-slate-800">{name}</span>
                         </div>
                       </td>
-                      <td className="text-sm text-slate-500">{emp?.department?.name || '-'}</td>
+                      <td className="text-sm text-slate-500">{ev.departmentName || '-'}</td>
                       <td className="text-sm text-slate-600">{ev.period}</td>
 
                       {/* Evaluator */}
@@ -662,7 +658,7 @@ export default function EvaluationView() {
                     <option key={e.id} value={e.id}>{e.firstName} {e.lastName} ({e.department?.name || '-'})</option>
                   ))}
                 </select>
-                  <p className="mt-1 text-xs text-amber-600">แสดงเฉพาะพนักงานในแผนกที่คุณดูแล</p>
+                <p className="mt-1 text-xs text-amber-600">แสดงเฉพาะพนักงานในแผนกที่คุณดูแล</p>
               </div>
               <div>
                 <label className="form-label">{t('evaluation.select_template')} *</label>
@@ -670,8 +666,8 @@ export default function EvaluationView() {
                   <option value="">{t('evaluation.select_template_placeholder')}</option>
                   {templates
                     .filter(tpl => {
-                      // Filter by department
-                      const emp = allEmployees.find(e => e.id === selEmployee);
+                      // Filter by department — use activeEmployees (already fetched for the form)
+                      const emp = activeEmployees.find(e => e.id === selEmployee);
                       const deptMatch = !emp || tpl.departmentId === emp.departmentId || tpl.departmentId === '';
 
                       // Filter by period logic
@@ -777,14 +773,13 @@ export default function EvaluationView() {
 
       {/* ── Score Detail Centered Popup ── */}
       {selectedEval && (() => {
-        const emp = allEmployees.find(e => e.id === selectedEval.employeeId);
         const tpl = templates.find(t => t.id === selectedEval.templateId);
         return (
           <ScoreDetailModal
             evaluation={selectedEval}
-            employeeName={emp ? `${emp.firstName} ${emp.lastName}` : selectedEval.employeeName || '-'}
-            employeeDept={emp?.department?.name || '-'}
-            employeeId={emp?.id || ''}
+            employeeName={selectedEval.employeeName || '-'}
+            employeeDept={selectedEval.departmentName || '-'}
+            employeeId={selectedEval.employeeId || ''}
             templateName={tpl?.name || '-'}
             onClose={() => setSelectedEval(null)}
           />

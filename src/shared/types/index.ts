@@ -109,6 +109,7 @@ export interface KPIEvaluation {
   tenantId?: string;
   employeeId: string;
   employeeName?: string;
+  departmentName?: string;
   templateId: string;
   period: string;
   periodType: string;

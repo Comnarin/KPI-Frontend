@@ -98,6 +98,10 @@
   "departments.employee_count": "จำนวนพนักงาน",
   "departments.confirm_delete": "คุณแน่ใจหรือไม่ว่าต้องการลบแผนกนี้?",
   "departments.save_edit": "บันทึกการแก้ไข",
+  "departments.employee_list": "พนักงานในแผนก",
+  "departments.no_employee": "ยังไม่มีพนักงาน",
+  "departments.add_employee": "เพิ่มพนักงานเข้าแผนก",
+  "departments.search_employee": "ค้นหาพนักงาน...",
   "kpi.title": "ตั้งค่า KPI",
   "kpi.subtitle": "กำหนดตัวชี้วัดและน้ำหนักสำหรับแต่ละแผนก",
   "kpi.create": "สร้างแม่แบบ KPI",
@@ -323,5 +327,6 @@
   "permissions.cat_employees": "พนักงาน",
   "permissions.cat_kpi": "KPI",
   "permissions.cat_salary": "เงินเดือน",
-  "permissions.cat_system": "ระบบ"
+  "permissions.cat_system": "ระบบ",
+  "errors.has_employees": "ไม่สามารถลบแผนกได้เนื่องจากยังมีพนักงานอยู่ในแผนกนี้"
 }

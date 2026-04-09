@@ -95,9 +95,13 @@
   "departments.name_placeholder": "e.g. Sales",
   "departments.description": "Description",
   "departments.description_placeholder": "Additional details...",
-  "departments.employee_count": "Employees",
+  "departments.employee_count": "Current Employee",
   "departments.confirm_delete": "Are you sure you want to delete this department?",
   "departments.save_edit": "Save Changes",
+  "departments.employee_list": "Employee in Department",
+  "departments.no_employee": "No employee in department",
+  "departments.add_employee": "Add Employee to Department",
+  "departments.search_employee": "Search employees...",
   "kpi.title": "KPI Templates",
   "kpi.subtitle": "Define KPI indicators and weights for each department",
   "kpi.create": "Create KPI Template",
@@ -323,5 +327,6 @@
   "permissions.cat_employees": "Employees",
   "permissions.cat_kpi": "KPI",
   "permissions.cat_salary": "Salary",
-  "permissions.cat_system": "System"
+  "permissions.cat_system": "System",
+  "errors.has_employees": "Cannot delete department because it still has employees assigned to it."
 }

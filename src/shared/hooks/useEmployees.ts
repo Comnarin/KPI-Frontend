@@ -38,6 +38,11 @@ export function useEmployees(options?: UseEmployeesOptions | string) {
     mutate();
   };
 
+  const partialUpdateEmployee = async (id: string, fields: Partial<Employee>) => {
+    await api.patch(`/employees/${id}`, fields);
+    mutate();
+  };
+
   const deleteEmployee = async (id: string) => {
     await api.delete(`/employees/${id}`);
     mutate();
@@ -49,6 +54,7 @@ export function useEmployees(options?: UseEmployeesOptions | string) {
     error,
     createEmployee,
     updateEmployee,
+    partialUpdateEmployee,
     deleteEmployee,
   };
 }
