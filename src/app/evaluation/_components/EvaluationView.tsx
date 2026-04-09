@@ -378,7 +378,7 @@ export default function EvaluationView() {
     let filtered = activeEmployees;
 
     if (isHead && user?.departmentId) {
-      filtered = activeEmployees.filter(e => e.department === user.departmentId);
+      filtered = activeEmployees.filter(e => e.departmentId === user.departmentId);
     }
 
     return filtered;
