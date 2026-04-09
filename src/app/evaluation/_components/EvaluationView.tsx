@@ -564,7 +564,7 @@ export default function EvaluationView() {
                           <span className="font-medium text-slate-800">{name}</span>
                         </div>
                       </td>
-                      <td className="text-sm text-slate-500">{emp?.department || '-'}</td>
+                      <td className="text-sm text-slate-500">{emp?.department?.name || '-'}</td>
                       <td className="text-sm text-slate-600">{ev.period}</td>
 
                       {/* Evaluator */}
@@ -659,12 +659,10 @@ export default function EvaluationView() {
                 }}>
                   <option value="">{t('evaluation.select_employee_placeholder')}</option>
                   {availableEmployees.map(e => (
-                    <option key={e.id} value={e.id}>{e.firstName} {e.lastName} ({e.department})</option>
+                    <option key={e.id} value={e.id}>{e.firstName} {e.lastName} ({e.department?.name || '-'})</option>
                   ))}
                 </select>
-                {isHead && user?.departmentId && (
-                  <p className="mt-1 text-xs text-amber-600">แสดงเฉพาะพนักงานในแผนก {user.departmentId}</p>
-                )}
+                  <p className="mt-1 text-xs text-amber-600">แสดงเฉพาะพนักงานในแผนกที่คุณดูแล</p>
               </div>
               <div>
                 <label className="form-label">{t('evaluation.select_template')} *</label>
@@ -674,7 +672,7 @@ export default function EvaluationView() {
                     .filter(tpl => {
                       // Filter by department
                       const emp = allEmployees.find(e => e.id === selEmployee);
-                      const deptMatch = !emp || tpl.department === emp.department || tpl.department === 'All';
+                      const deptMatch = !emp || tpl.departmentId === emp.departmentId || tpl.departmentId === '';
 
                       // Filter by period logic
                       // Match if template is global ('ALL') OR matches current active period label
@@ -785,7 +783,7 @@ export default function EvaluationView() {
           <ScoreDetailModal
             evaluation={selectedEval}
             employeeName={emp ? `${emp.firstName} ${emp.lastName}` : selectedEval.employeeName || '-'}
-            employeeDept={emp?.department || '-'}
+            employeeDept={emp?.department?.name || '-'}
             employeeId={emp?.id || ''}
             templateName={tpl?.name || '-'}
             onClose={() => setSelectedEval(null)}

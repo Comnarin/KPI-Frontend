@@ -33,7 +33,8 @@ export interface Employee {
   code?: string; // EMP001 (backend auto-generates on create)
   firstName: string;
   lastName: string;
-  department: string; // DB department name (free text from DB)
+  departmentId: string; // DB department ID
+  department?: DepartmentRecord; // Preloaded department entity
   position: string;
   baseSalary: number; // P1
   personalCapacity: number; // P2 — extra fixed pay (experience/seniority)
@@ -79,7 +80,8 @@ export interface KPITemplate {
   id: string;
   tenantId?: string;
   name: string; // "แม่แบบฝ่ายขาย"
-  department: string; // DB department name
+  departmentId: string; // DB department ID
+  department?: DepartmentRecord; // Preloaded department entity
   visibility?: string; // PERSONAL | GENERAL
   period: EvaluationPeriodType | string;
   definition?: KPIItem[];

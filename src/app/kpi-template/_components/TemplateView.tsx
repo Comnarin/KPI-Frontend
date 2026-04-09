@@ -35,7 +35,7 @@ export default function TemplateView() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<KPITemplate | null>(null);
   const [name, setName] = useState('');
-  const [dept, setDept] = useState<string>('All');
+  const [deptId, setDeptId] = useState<string>('');
   const [visibility, setVisibility] = useState<string>('GENERAL');
   const [period, setPeriod] = useState<string>('ALL');
   const [kpis, setKpis] = useState<KPIItem[]>([emptyKpi()]);
@@ -54,14 +54,14 @@ export default function TemplateView() {
 
   function openAdd() {
     setEditing(null);
-    setName(''); setDept('All');
+    setName(''); setDeptId('');
     setVisibility('GENERAL'); setPeriod('ALL'); setKpis([emptyKpi()]);
     setModalOpen(true);
   }
 
   function openEdit(tpl: KPITemplate) {
     setEditing(tpl);
-    setName(tpl.name); setDept(tpl.department);
+    setName(tpl.name); setDeptId(tpl.departmentId || '');
     setVisibility(tpl.visibility || 'GENERAL'); setPeriod(tpl.period);
     setKpis([...(tpl.definition ?? [])]);
     setModalOpen(true);
@@ -75,7 +75,7 @@ export default function TemplateView() {
     if (!weightOk) { setFormError(t('kpi.weight_required')); return; }
     const baseFields: Omit<KPITemplate, 'id'> = {
       name,
-      department: dept,
+      departmentId: deptId,
       visibility,
       period,
       definition: kpis,
@@ -166,8 +166,8 @@ export default function TemplateView() {
                       )}
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="badge badge-purple">{tpl.department}</span>
-                      <span className="badge badge-blue">
+                       <span className="badge badge-purple">{tpl.department?.name || t('kpi.all_departments')}</span>
+                       <span className="badge badge-blue">
                         {tpl.period === 'ALL' ? t('kpi.all_periods') : tpl.period}
                       </span>
                     </div>
@@ -229,9 +229,9 @@ export default function TemplateView() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="form-label">{t('kpi.department')}</label>
-              <select className="input-field" value={dept} onChange={(e) => setDept(e.target.value)}>
-                <option value="All">{t('kpi.all_departments')}</option>
-                {departments.map((d: { name: string }) => <option key={d.name} value={d.name}>{d.name}</option>)}
+              <select className="input-field" value={deptId} onChange={(e) => setDeptId(e.target.value)}>
+                <option value="">{t('kpi.all_departments')}</option>
+                {departments.map((d: { id: string, name: string }) => <option key={d.id} value={d.id}>{d.name}</option>)}
               </select>
             </div>
             <div>

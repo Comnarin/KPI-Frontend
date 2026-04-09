@@ -20,7 +20,7 @@ interface EmployeeForm {
   lastName: string;
   email: string;
   code: string;
-  department: string;
+  departmentId: string;
   position: string;
   baseSalary: number;
   personalCapacity: number;
@@ -42,7 +42,7 @@ export default function EmployeesView() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Employee | null>(null);
   const [form, setForm] = useState<EmployeeForm>({
-    firstName: '', lastName: '', email: '', code: '', department: '',
+    firstName: '', lastName: '', email: '', code: '', departmentId: '',
     position: '', baseSalary: 0, personalCapacity: 0, variablePayBase: 0,
     yearsOfService: 0, status: 'ACTIVE', startDate: new Date().toISOString().slice(0, 10),
   });
@@ -52,7 +52,7 @@ export default function EmployeesView() {
   function openAdd() {
     setEditing(null);
     setForm({
-      firstName: '', lastName: '', email: '', code: '', department: departments[0]?.name || '',
+      firstName: '', lastName: '', email: '', code: '', departmentId: departments[0]?.id || '',
       position: '', baseSalary: 0, personalCapacity: 0, variablePayBase: 0,
       yearsOfService: 0, status: 'ACTIVE', startDate: new Date().toISOString().slice(0, 10),
     });
@@ -63,7 +63,7 @@ export default function EmployeesView() {
     setEditing(emp);
     setForm({
       firstName: emp.firstName, lastName: emp.lastName, email: emp.email || '', code: emp.code || '',
-      department: emp.department, position: emp.position, baseSalary: emp.baseSalary,
+      departmentId: emp.departmentId, position: emp.position, baseSalary: emp.baseSalary,
       personalCapacity: emp.personalCapacity, variablePayBase: emp.variablePayBase,
       yearsOfService: emp.yearsOfService, status: (emp.status as EmployeeStatus) || 'ทำงาน', startDate: emp.startDate || new Date().toISOString().slice(0, 10),
     });
@@ -146,7 +146,7 @@ export default function EmployeesView() {
                     </div>
                   </td>
                   <td className="text-sm text-slate-500 font-mono">{emp.code}</td>
-                  <td><span className="badge badge-purple">{emp.department}</span></td>
+                  <td><span className="badge badge-purple">{emp.department?.name || t('common.not_specified')}</span></td>
                   <td className="text-sm text-slate-600">{emp.position}</td>
                   <td>
                     <span className={`badge ${String(emp.status) === 'ACTIVE' || emp.status === 'ทำงาน' ? 'badge-green' : 'badge-slate'}`}>
@@ -198,9 +198,9 @@ export default function EmployeesView() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="form-label">{t('employees.department')}</label>
-              <select className="input-field" value={form.department} onChange={e => setForm({ ...form, department: e.target.value })}>
+              <select className="input-field" value={form.departmentId} onChange={e => setForm({ ...form, departmentId: e.target.value })}>
                 <option value="">{t('employees.select_department')}</option>
-                {departments.map(d => <option key={d.id} value={d.name}>{d.name}</option>)}
+                {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
               </select>
             </div>
             <div><label className="form-label">{t('employees.position')}</label><input className="input-field" value={form.position} onChange={e => setForm({ ...form, position: e.target.value })} /></div>

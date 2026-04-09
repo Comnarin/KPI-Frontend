@@ -148,7 +148,7 @@ function buildHTML(emp: Employee, adj: SalaryAdjustment): string {
     <div class="emp-grid">
       <div class="emp-cell"><div class="lbl">ชื่อ-นามสกุล</div><div class="val">${emp.firstName} ${emp.lastName}</div></div>
       <div class="emp-cell"><div class="lbl">รหัสพนักงาน</div><div class="val">${emp.code}</div></div>
-      <div class="emp-cell"><div class="lbl">แผนก</div><div class="val">${emp.department}</div></div>
+      <div class="emp-cell"><div class="lbl">แผนก</div><div class="val">${emp.department?.name || '-'}</div></div>
       <div class="emp-cell"><div class="lbl">ตำแหน่ง</div><div class="val">${emp.position}</div></div>
       <div class="emp-cell"><div class="lbl">อายุงาน</div><div class="val">${emp.yearsOfService} ปี</div></div>
       <div class="emp-cell"><div class="lbl">วันที่เริ่มงาน</div><div class="val">${thaiDate(emp.startDate)}</div></div>

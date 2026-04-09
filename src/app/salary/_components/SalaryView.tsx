@@ -181,7 +181,7 @@ export default function SalaryView() {
                   </div>
                   <div className="flex-1">
                     <div className="font-semibold text-slate-800">{empForCalc.firstName} {empForCalc.lastName}</div>
-                    <div className="text-xs text-slate-500">{empForCalc.position} · {empForCalc.department}</div>
+                    <div className="text-xs text-slate-500">{empForCalc.position} · {empForCalc.department?.name || '-'}</div>
                   </div>
                   {empScore !== null && (
                     <div className="text-right">
